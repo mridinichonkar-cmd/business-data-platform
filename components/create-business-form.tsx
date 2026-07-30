@@ -61,15 +61,24 @@ export default function CreateBusinessForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-xl border bg-white p-6 shadow-sm"
+      className="flex min-h-[310px] flex-col rounded-xl border-2 border-dashed border-slate-300 bg-white p-6 shadow-sm transition hover:border-teal-700"
     >
-      <h2 className="text-xl font-semibold text-gray-900">
-        Create a business
+   
+    <div className="mb-6 flex items-center gap-5">
+    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-teal-100 text-teal-800">
+      <span className="text-3xl font-semibold">+</span>
+    </div>
+
+    <div>
+      <h2 className="font-semibold text-xl text-slate-950">
+        Register New Business
       </h2>
 
-      <p className="mt-1 text-sm text-gray-600">
-        Add the business whose data you want to manage.
+      <p className="mt-1 text-md text-slate-500">
+        Add another organisation to your account.
       </p>
+    </div>
+  </div>
 
       <div className="mt-6">
         <label
@@ -109,10 +118,10 @@ export default function CreateBusinessForm() {
           placeholder="Example: Construction"
           maxLength={100}
           disabled={isSubmitting}
-          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 outline-none focus:border-black"
+          className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 mb-5 text-gray-900 outline-none focus:border-black"
         />
 
-        <p className="mt-1 text-xs text-gray-500">Optional</p>
+        
       </div>
 
       {errorMessage && (
@@ -124,7 +133,7 @@ export default function CreateBusinessForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="mt-6 rounded-lg bg-black px-4 py-2 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-auto w-full rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isSubmitting ? "Creating..." : "Create business"}
       </button>
