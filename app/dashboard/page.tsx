@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CreateBusinessForm from "@/components/create-business-form";
+import Link from "next/link";
 
 async function DashboardContent() {
   const supabase = await createClient();
@@ -60,23 +61,36 @@ async function DashboardContent() {
         {!error && businesses && businesses.length > 0 && (
           <div className="mt-6 grid gap-4">
             {businesses.map((business) => (
-              <article
+              <Link
                 key={business.id}
-                className="rounded-xl border bg-white p-5 shadow-sm"
+                href={`dashboard/businesses/${business.id}`}
+                className="block rounded-xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-gray-400 hover:shadow-md"
               >
-                <h3 className="text-lg font-semibold text-gray-900">
-                  {business.name}
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {business.name}
                 </h3>
 
                 <p className="mt-1 text-sm text-gray-600">
                   {business.industry || "No industry provided"}
                 </p>
+                </div>
+
+                <span className="mt-4 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800">
+                  Open →
+
+                </span>
+              </div>
 
                 <p className="mt-4 text-xs text-gray-400">
                   Created{" "}
                   {new Date(business.created_at).toLocaleDateString("en-AU")}
                 </p>
-              </article>
+              
+              </Link>
+
+          
             ))}
           </div>
         )}
