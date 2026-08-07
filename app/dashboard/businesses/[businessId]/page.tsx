@@ -50,14 +50,43 @@ export default async function BusinessDashboardPage({
     notFound();
   }
 
-  const dashboardStats: DashboardStats = {
-    totalRecords: 0,
-    datasetCount: 0,
-    customFieldCount: 0,
-    dataQualityScore: 0,
-    validationIssueCount: 0,
-    insightCount: 0,
-  };
+  // ---------------- data from csv added
+const { data: datasets, error: datasetsError } = await supabase
+  .from("datasets")
+  .select("id, row_count, columns")
+  .eq("business_id", business.id);
+
+if (datasetsError) {
+  console.error("Failed to load datasets:", datasetsError);
+}
+
+const safeDatasets = datasets ?? [];
+
+const dashboardStats: DashboardStats = {
+  datasetCount: safeDatasets.length,
+
+  totalRecords: safeDatasets.reduce(
+    (total, dataset) => total + (dataset.row_count ?? 0),
+    0,
+  ),
+
+  customFieldCount: safeDatasets.reduce(
+    (total, dataset) =>
+      total +
+      (Array.isArray(dataset.columns)
+        ? dataset.columns.length
+        : 0),
+    0,
+  ),
+
+  /*
+   * We have not implemented validation yet, so do not claim
+   * that the data has a 100% quality score.
+   */
+  dataQualityScore: 0,
+  validationIssueCount: 0,
+  insightCount: 0,
+};
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
@@ -284,7 +313,7 @@ export default async function BusinessDashboardPage({
                   </p>
 
                   <p className="text-sm font-semibold text-teal-700">
-                    Healthy
+                    Not Analysed
                   </p>
                 </div>
 

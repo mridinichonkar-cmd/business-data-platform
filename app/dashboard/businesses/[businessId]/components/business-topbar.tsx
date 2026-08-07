@@ -60,7 +60,7 @@ export default function BusinessTopbar({
           </button>
 
           <Link
-            href={`/dashboard/businesses/${business.id}/datasets`}
+            href={`/dashboard/businesses/${business.id}/upload`}
             className="flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
             <Plus className="h-4 w-4" />

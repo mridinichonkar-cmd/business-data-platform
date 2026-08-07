@@ -61,15 +61,20 @@ export default function DatasetsCard({
           </Link>
         </div>
       ) : (
-        <div className="space-y-3">
-          <p className="text-sm text-slate-500">
-            {datasetCount}{" "}
-            {datasetCount === 1 ? "dataset" : "datasets"} available.
+        <div className="flex min-h-56 flex-col items-center justify-center rounded-lg bg-slate-50 p-8 text-center">
+          <Database className="h-9 w-9 text-teal-700" />
+
+          <p className="mt-4 text-3xl font-bold text-slate-950">
+            {datasetCount}
+          </p>
+
+          <p className="mt-1 text-sm text-slate-500">
+            {datasetCount === 1 ? "dataset available" : "datasets available"}
           </p>
 
           <Link
             href={datasetsPath}
-            className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:underline"
+            className="mt-5 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
           >
             Browse datasets
             <ChevronRight className="h-4 w-4" />
