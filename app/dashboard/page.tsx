@@ -25,7 +25,7 @@ async function DashboardContent() {
 
   const { data: businesses, error } = await supabase
     .from("businesses")
-    .select("id, name, industry, created_at")
+    .select("id, name, industry, created_at,datasets(id)")
     .order("created_at", { ascending: false });
 
   const businessCount = businesses?.length ?? 0;
@@ -144,7 +144,7 @@ async function DashboardContent() {
                     </p>
 
                     <p className="mt-1 text-2xl font-semibold text-slate-950">
-                      0
+                      {business.datasets.length.toString().padStart(2, "0")}
                     </p>
                   </div>
 

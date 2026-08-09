@@ -31,7 +31,11 @@ export default function MetricsGrid({ stats }: MetricsGridProps) {
 
       <MetricCard
         title="Data quality"
-        value={`${stats.dataQualityScore}%`}
+        value={ 
+          stats.datasetCount === 0 ||
+          stats.dataQualityScore === 0
+          ? "—"
+          : `${stats.dataQualityScore}%`}
         detail={
           stats.validationIssueCount === 0
             ? "No issues detected"
