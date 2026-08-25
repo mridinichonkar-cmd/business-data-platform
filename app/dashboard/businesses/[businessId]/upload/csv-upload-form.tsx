@@ -3,6 +3,8 @@
 import Papa from "papaparse"
 import {useRouter} from "next/navigation"
 import {ChangeEvent, SubmitEvent, useState} from "react"
+import { detectFields } from "@/lib/analytics/detect-fields";
+import { normalizeFieldTypeForStorage } from "@/lib/analytics/detect-field-type";
 
 import {
   AlertCircle,
@@ -172,6 +174,26 @@ export default function CsvUploadForm({
       }
 
       createdDatasetId = dataset.id;
+
+      const detectedFields = detectFields(
+        columns,
+        rows,
+      );
+
+      const { error: fieldsError } = await supabase
+        .from("field_definitions")
+        .insert(
+          detectedFields.map((field) => ({
+            dataset_id: dataset.id,
+            name: field.name,
+            field_key: field.field_key,
+            data_type: normalizeFieldTypeForStorage(field.data_type),
+          })),
+        );
+
+      if (fieldsError) {
+        throw new Error(fieldsError.message);
+      }
 
       for (
         let startIndex = 0;

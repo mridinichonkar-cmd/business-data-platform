@@ -2,6 +2,7 @@ export type FieldType =
   | "text"
   | "number"
   | "date"
+  | "id"
   | "boolean"
   | "category";
 
@@ -27,6 +28,39 @@ function isNumberValue(value: string): boolean {
   return cleaned !== "" && Number.isFinite(Number(cleaned));
 }
 
+function isIdValue(value: string): boolean {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  if (/^\d+$/.test(trimmed)) {
+    return true;
+  }
+
+  if (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      trimmed,
+    )
+  ) {
+    return true;
+  }
+
+  return (
+    !/\s/.test(trimmed) &&
+    /[0-9]/.test(trimmed) &&
+    /[a-z]/i.test(trimmed) &&
+    /^[a-z0-9._-]+$/i.test(trimmed)
+  );
+}
+
+function looksLikeIdColumn(columnName: string): boolean {
+  const normalized = columnName.trim().toLowerCase();
+
+  return /(^|_)(id|identifier|uuid|guid|code)(_|$)/.test(normalized);
+}
+
 function isDateValue(value: string): boolean {
   const trimmed = value.trim();
 
@@ -34,9 +68,6 @@ function isDateValue(value: string): boolean {
     return false;
   }
 
-  /*
-   * Avoid classifying plain numbers such as customer IDs as dates.
-   */
   if (/^\d+$/.test(trimmed)) {
     return false;
   }
@@ -44,8 +75,33 @@ function isDateValue(value: string): boolean {
   return !Number.isNaN(Date.parse(trimmed));
 }
 
+export type PersistedFieldType =
+  | "text"
+  | "number"
+  | "date"
+  | "boolean"
+  | "category";
+
+export function normalizeFieldTypeForStorage(
+  type: string,
+): PersistedFieldType {
+  switch (type) {
+    case "number":
+    case "date":
+    case "boolean":
+    case "category":
+    case "text":
+      return type;
+
+    case "id":
+    default:
+      return "text";
+  }
+}
+
 export function detectFieldType(
   values: string[],
+  columnName = "",
 ): FieldType {
   const nonEmptyValues = values
     .map((value) => value.trim())
@@ -67,6 +123,13 @@ export function detectFieldType(
     ratioMatching(isBooleanValue) >= requiredMatchRatio
   ) {
     return "boolean";
+  }
+
+  if (
+    looksLikeIdColumn(columnName) ||
+    ratioMatching(isIdValue) >= requiredMatchRatio
+  ) {
+    return "id";
   }
 
   if (

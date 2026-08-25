@@ -1,77 +1,136 @@
+"use client";
+
 import { BarChart3 } from "lucide-react";
 
-type RecordActivityCardProps = {
-  totalRecords: number;
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+
+type ActivityPoint = {
+  date: string;
+  count: number;
 };
 
-const activityValues = [18, 28, 22, 42, 35, 52, 46];
+type RecordActivityCardProps = {
+  activity: ActivityPoint[];
+};
 
-const dayLabels = [
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-  "Sun",
-];
+function formatActivityDate(
+  dateString: string,
+): string {
+  const date = new Date(`${dateString}T00:00:00`);
+
+  return new Intl.DateTimeFormat("en-AU", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
 
 export default function RecordActivityCard({
-  totalRecords,
+  activity,
 }: RecordActivityCardProps) {
+  const chartData = activity.map((item) => ({
+    date: formatActivityDate(item.date),
+    count: item.count,
+  }));
+
+  const importedRecords = activity.reduce(
+    (total, item) => total + item.count,
+    0,
+  );
+
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
-      <div className="mb-8 flex items-start justify-between gap-4">
+      <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-950">
-            Record Activity
+            Import Activity
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            Records added or updated during the selected period.
+            Records added through dataset imports over the last 7 days.
           </p>
         </div>
 
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-          Last 7 days
-        </span>
-      </div>
+        {activity.length > 0 && (
+          <div className="text-right">
+            <p className="text-xl font-bold text-slate-950">
+              {importedRecords.toLocaleString()}
+            </p>
 
-      <div className="relative flex h-64 items-end gap-3 border-b border-l border-slate-200 px-4">
-        {activityValues.map((height, index) => (
-          <div
-            key={dayLabels[index]}
-            className="group flex h-full flex-1 items-end"
-          >
-            <div
-              className="w-full rounded-t-md bg-slate-200 transition group-hover:bg-slate-950"
-              style={{ height: `${height}%` }}
-            />
-          </div>
-        ))}
-
-        {totalRecords === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/90">
-            <div className="max-w-sm px-6 text-center">
-              <BarChart3 className="mx-auto h-8 w-8 text-slate-300" />
-
-              <p className="mt-3 font-semibold text-slate-900">
-                No activity data yet
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                Upload a dataset to begin tracking record activity over time.
-              </p>
-            </div>
+            <p className="text-xs text-slate-500">
+              records imported
+            </p>
           </div>
         )}
       </div>
 
-      <div className="mt-4 flex justify-between text-xs font-medium text-slate-400">
-        {dayLabels.map((day) => (
-          <span key={day}>{day}</span>
-        ))}
-      </div>
+      {chartData.length === 0 ? (
+        <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-6 text-center">
+          <BarChart3 className="h-8 w-8 text-slate-300" />
+
+          <p className="mt-4 font-semibold text-slate-900">
+            No import activity yet
+          </p>
+
+          <p className="mt-2 text-sm text-slate-500">
+            Upload a dataset to begin tracking record activity.
+          </p>
+        </div>
+      ) : (
+        <div className="h-64 w-full">
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+          >
+             <BarChart
+              data={chartData}
+              margin={{
+                top: 10,
+                right: 10,
+                left: -10,
+                bottom: 0,
+              }}
+              >
+
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+              />
+
+              <XAxis
+                dataKey="date"
+                tick={{ fontSize: 12 }}
+              />
+
+              <YAxis
+                allowDecimals={false}
+                tick={{ fontSize: 12 }}
+                tickFormatter={(value) =>
+                  value >= 1000
+                    ? `${(value / 1000).toFixed(1)}k`
+                    : String(value)
+                }
+              />
+
+              <Tooltip />
+
+              <Bar
+                dataKey="count"
+                fill="#0f172a"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={48}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </article>
   );
 }

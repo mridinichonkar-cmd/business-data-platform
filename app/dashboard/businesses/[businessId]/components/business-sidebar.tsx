@@ -10,7 +10,7 @@ import {
   Upload,
 } from "lucide-react";
 
-import type { Business } from "../types";
+import type { Business } from "../types/types";
 
 type BusinessSidebarProps = {
   business: Business;
