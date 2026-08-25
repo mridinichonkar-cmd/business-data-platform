@@ -5,7 +5,7 @@ import {
   Table2,
 } from "lucide-react";
 
-import type { DashboardStats } from "../types";
+import type { DashboardStats } from "../types/types";
 import MetricCard from "./metric-card";
 
 type MetricsGridProps = {
