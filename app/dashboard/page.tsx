@@ -23,12 +23,101 @@ async function DashboardContent() {
     redirect("/auth/login");
   }
 
-  const { data: businesses, error } = await supabase
-    .from("businesses")
-    .select("id, name, industry, created_at,datasets(id)")
-    .order("created_at", { ascending: false });
+  
 
-  const businessCount = businesses?.length ?? 0;
+  const { data: businesses, error } = await supabase
+  .from("businesses")
+  .select(`
+    id,
+    name,
+    industry,
+    created_at,
+    datasets (
+      id,
+      name,
+      row_count,
+      created_at
+    )
+  `)
+  .order("created_at", { ascending: false });
+
+
+const businessCount = businesses?.length ?? 0;
+
+
+const safeBusinesses = businesses ?? [];
+
+
+
+
+const totalDatasets = safeBusinesses.reduce(
+  (total, business) =>
+    total + (business.datasets?.length ?? 0),
+  0,
+);
+
+const totalRecords = safeBusinesses.reduce(
+  (total, business) =>
+    total +
+    (business.datasets ?? []).reduce(
+      (datasetTotal, dataset) =>
+        datasetTotal + (dataset.row_count ?? 0),
+      0,
+    ),
+  0,
+);
+
+const businessesWithRecordCounts = safeBusinesses.map(
+  (business) => ({
+    ...business,
+    recordCount: (business.datasets ?? []).reduce(
+      (total, dataset) =>
+        total + (dataset.row_count ?? 0),
+      0,
+    ),
+  }),
+);
+
+const mostActiveBusiness =
+  businessesWithRecordCounts.sort(
+    (a, b) => b.recordCount - a.recordCount,
+  )[0];
+
+
+  const businessActivities = (businesses ?? []).map(
+  (business) => ({
+    id: `business-${business.id}`,
+    event: "Business created",
+    businessName: business.name,
+    createdAt: business.created_at,
+    status: "Completed",
+  }),
+);
+
+const datasetActivities = (businesses ?? []).flatMap(
+  (business) =>
+    (business.datasets ?? []).map((dataset) => ({
+      id: `dataset-${dataset.id}`,
+      event: `${dataset.name} imported`,
+      businessName: business.name,
+      createdAt: dataset.created_at,
+      status: `${(dataset.row_count ?? 0).toLocaleString()} records`,
+    })),
+);
+
+const accountActivity = [
+  ...businessActivities,
+  ...datasetActivities,
+]
+  .sort(
+    (a, b) =>
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime(),
+  )
+  .slice(0, 8);
+
+
+  
     return (
     <>
       {/* Top navigation */}
@@ -203,36 +292,56 @@ async function DashboardContent() {
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-8">
-                <div>
-                  <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
-                    Total businesses
-                  </p>
+              {/* Total businesses */}
+              <div>
+                <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
+                  Total businesses
+                </p>
 
-                  <p className="mt-1 text-3xl font-semibold">
-                    {businessCount.toString().padStart(2, "0")}
-                  </p>
-                </div>
-
-                <div className="h-12 w-px bg-slate-700" />
-
-                <div>
-                  <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
-                    Total datasets
-                  </p>
-
-                  <p className="mt-1 text-3xl font-semibold">00</p>
-                </div>
-
-                <div className="h-12 w-px bg-slate-700" />
-
-                <div>
-                  <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
-                    Pending imports
-                  </p>
-
-                  <p className="mt-1 text-3xl font-semibold">00</p>
-                </div>
+                <p className="mt-1 text-3xl font-semibold">
+                  {businessCount.toString().padStart(2, "0")}
+                </p>
               </div>
+
+              <div className="h-12 w-px bg-slate-700" />
+
+              {/* Total datasets */}
+              <div>
+                <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
+                  Total datasets
+                </p>
+
+                <p className="mt-1 text-3xl font-semibold">
+                  {totalDatasets.toString().padStart(2, "0")}
+                </p>
+              </div>
+
+              <div className="h-12 w-px bg-slate-700" />
+
+              {/* Total records */}
+              <div>
+                <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
+                  Total records
+                </p>
+
+                <p className="mt-1 text-3xl font-semibold">
+                  {totalRecords.toLocaleString()}
+                </p>
+              </div>
+
+              <div className="h-12 w-px bg-slate-700" />
+
+              {/* Largest workspace */}
+              <div>
+                <p className="text-[16px] font-bold uppercase tracking-wide text-slate-400">
+                  Largest workspace
+                </p>
+
+                <p className="mt-1 max-w-48 truncate text-xl font-semibold">
+                  {mostActiveBusiness?.name ?? "—"}
+                </p>
+              </div>
+            </div>
             </div>
 
             <div className="absolute -right-20 -top-20 h-72 w-72 rounded-full border border-slate-700 opacity-50" />
@@ -262,16 +371,52 @@ async function DashboardContent() {
               </div>
             </div>
 
-            <div className="p-10 text-center">
-              <h3 className="font-semibold text-slate-900">
-                No account activity yet
-              </h3>
+            {accountActivity.length === 0 ? (
+          <div className="p-10 text-center">
+            <h3 className="font-semibold text-slate-900">
+              No account activity yet
+            </h3>
 
-              <p className="mt-2 text-sm text-slate-500">
-                Dataset creation, CSV imports and record updates will appear
-                here later.
-              </p>
-            </div>
+            <p className="mt-2 text-sm text-slate-500">
+              Business and dataset activity will appear here.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-200">
+            {accountActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="grid grid-cols-4 items-center px-6 py-4 text-sm"
+              >
+                <div>
+                  <p className="font-semibold text-slate-900">
+                    {activity.event}
+                  </p>
+                </div>
+
+                <p className="text-slate-600">
+                  {activity.businessName}
+                </p>
+
+                <p className="text-slate-500">
+                  {new Intl.DateTimeFormat("en-AU", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  }).format(
+                    new Date(activity.createdAt),
+                  )}
+                </p>
+
+                <div>
+                  <span className="inline-flex rounded-full bg-teal-100 px-3 py-1 text-xs font-semibold text-teal-700">
+                    {activity.status}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
           </div>
         </section>
       </main>
