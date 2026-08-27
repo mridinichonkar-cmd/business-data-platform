@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   ArrowLeft,
@@ -145,6 +145,7 @@ export default function AnalyticsDashboard({
     dateAnalyses[0]?.fieldId ?? "",
   );
 
+  
   const selectedCategory = useMemo(
     () =>
       categoryAnalyses.find(
@@ -163,14 +164,27 @@ export default function AnalyticsDashboard({
     [numericAnalyses, selectedNumericId],
   );
 
-  const selectedDate = useMemo(
-    () =>
-      dateAnalyses.find(
-        (analysis) =>
-          analysis.fieldId === selectedDateId,
-      ) ?? dateAnalyses[0],
-    [dateAnalyses, selectedDateId],
+ const selectedDate = useMemo(() => {
+  return (
+    dateAnalyses.find(
+      (analysis) => analysis.fieldId === selectedDateId,
+    ) ??
+    dateAnalyses[0] ??
+    null
   );
+}, [dateAnalyses, selectedDateId]);
+
+useEffect(() => {
+  const fieldStillExists = dateAnalyses.some(
+    (analysis) => analysis.fieldId === selectedDateId,
+  );
+
+  if (!fieldStillExists) {
+    setSelectedDateId(
+      dateAnalyses[0]?.fieldId ?? "",
+    );
+  }
+}, [dateAnalyses, selectedDateId]);
 
   const availableAnalysisCount =
     (categoryAnalyses.length > 0 ? 1 : 0) +
@@ -503,22 +517,22 @@ export default function AnalyticsDashboard({
               </div>
 
               <select
-                value={selectedDate.fieldId}
-                onChange={(event) =>
-                    setSelectedDateId(event.target.value)
-                }
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950"
+              value={selectedNumeric.fieldId}
+              onChange={(event) =>
+                setSelectedNumericId(event.target.value)
+              }
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none focus:border-slate-950"
+            >
+              {numericAnalyses.map((analysis) => (
+                <option
+                  key={analysis.fieldId}
+                  value={analysis.fieldId}
+                  className="bg-white text-slate-950"
                 >
-                {dateAnalyses.map((analysis) => (
-                    <option
-                    key={analysis.fieldId}
-                    value={analysis.fieldId}
-                    className="bg-white text-slate-950"
-                    >
-                    {analysis.fieldName}
-                    </option>
-                ))}
-                </select>
+                  {analysis.fieldName}
+                </option>
+              ))}
+            </select>
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-5">
